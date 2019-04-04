@@ -75,6 +75,13 @@ abstract class ClientBase
     protected $contractId;
 
     /**
+     * The Canada Post API platform ID.
+     *
+     * @var string
+     */
+    protected $platformId;
+
+    /**
      * ClientBase constructor.
      *
      * @param array $config
@@ -166,6 +173,12 @@ abstract class ClientBase
         array $options = []
     ) {
         $url = $this->baseUrl . '/' . $endpoint;
+
+        if ($this->config['env'] == self::ENV_PRODUCTION) {
+            $headers = array_merge([
+                'Platform-Id' => $this->platformId,
+            ], $headers);
+        }
 
         try {
             $client = $this->buildClient($options);
@@ -310,10 +323,16 @@ abstract class ClientBase
             throw new \InvalidArgumentException($message);
         }
 
+        if ($config['env'] == self::ENV_PRODUCTION && !isset($config['platform_id'])) {
+            $message = 'Platform Id is required for the production environment API.';
+            throw new \InvalidArgumentException($message);
+        }
+
         $this->username = $config['username'];
         $this->password = $config['password'];
         $this->customerNumber = $config['customer_number'];
         $this->contractId = isset($config['contract_id']) ? $config['contract_id'] : null;
+        $this->platformId = isset($config['platform_id']) ? $config['platform_id'] : null;
     }
 
     /**
